@@ -6,28 +6,28 @@ using namespace std;
 #define dn "Danial Mobini (40130023)"                                                      // developer name
 #define sep "------------------------------------------------------------------------\n? " // seperator
 
-// ۷- برنامه نسبت به حروف کوچک و بزرگ حساس است.
-// خطاهاي موجود در هر عبارت باید توسط برنامه اعلام شود. به عنوان نمونه:
-// (Error: Divide by zero) خطاي تقسیم بر صفر (a
-// (Error: Undefined variable ‘x’) خطاي عدم تعریف یک متغیر (b
-// Error: Invalid variable name ‘x خطاي عدم اعتبار نام یک متغیر (’ 12 (c
-//         ۹- مشخصات برنامه تحویلی به زبان
-// برنامه تحویل گرفته می شود. exe فایل هاي پروژه برنامه به همراه فایل (a
-// فرمت خروجی برنامه باید دقیقا مشابه نمونه نشان داده شده باشد. (b
-// برنامه به صورت ماژولار نوشته شود . (c
-// براي نامگذاري متغیرها و توابع، اسامی با معنا و قواعد نام گذاري رعایت شود (d
-// • متغیرهاي محلی با حرف کوچک آغاز می شوند
-// • اسامی توابع با حرف بزرگ
-// • اگر یک اسم از چند کلمه تشکیل شده بود، حرف اول هر کلمه بزرگ و مابقی حروف کوچک باشد.
-
-// اگر عبارت ورودی یک عبارت ریاضی باشد، برنامه باید مقدار آن را محاسبه کرده و نتیجه را چاپ کند.
-
 void Calculator::start()
 {
     cout << "Simple Command input Expression Calculator\n"
          << "Version 1.1\n"
          << "Developer: " << dn << ln
          << sep;
+}
+
+void Calculator::cal()
+{
+    try
+    {
+        string input;
+        cin >> input;
+        if (fun(input))
+            cal();
+    }
+    catch (const exception &e)
+    {
+        cerr << e.what() << '\n';
+        cal();
+    }
 }
 
 bool Calculator::fun(string input)
@@ -70,62 +70,55 @@ bool Calculator::fun(string input)
     }
     else
     {
-        // اگر عبارت ورودی یک عبارت ریاضی باشد، برنامه باید مقدار آن را محاسبه کرده و نتیجه را چاپ کند.
-        // z=3∗x−2∗y
         if (input.contains('='))
         {
-            string str = input.substr(0, input.find('='));
-            var.push_back(str);
-            cout << str << ln;
+            if (input.contains('+') || input.contains('-') || input.contains('*') || input.contains('/'))
+            {
+                operation(input);
+            }
+            else
+            {
+                string str = input.substr(0, input.find('='));
+
+                cout << str << ln;
+            }
         }
-        else if (input.contains('+'))
+        else if (input.contains('+') || input.contains('-') || input.contains('*') || input.contains('/'))
         {
-            cout << "a\n";
-        }
-        else if (input.contains('-'))
-        {
-            cout << "a\n";
-        }
-        else if (input.contains('/'))
-        {
-            cout << "a\n";
-        }
-        else if (input.contains('*'))
-        {
-            cout << "a\n";
+            operation(input);
         }
         else
         {
-            cout << "Error: Invalid command " << input;
+            cout << "Error: Invalid command " << input << ln;
         }
     }
     return true;
 }
 
-void Calculator::cal()
+void Calculator::operation(string str)
 {
-    try
-    {
-        string input;
-        cin >> input;
-        if (fun(input))
-            cal();
-    }
-    catch (const exception &e)
-    {
-        cerr << e.what() << '\n';
-        cal();
-    }
 }
 
 void Calculator::variables()
 {
     // منجر به چاپ لیست متغیرهاي تعریف شده به همراه ارزش آنها می شود
+    cout << "ans =\n"
+         << "{\n";
+    for (auto &&i : var)
+    {
+        cout << i.first << '=' << i.second << ln;
+    }
+    cout << "}\n"
+         << sep;
 }
 
 void Calculator::clear()
 {
     //  کلیه متغیرها را حذف می کن . د
+    cout << "ans =\n"
+         << "{\n"
+         << var.size() << " variables deleted\n";
+    var.clear();
 }
 
 void Calculator::save()
@@ -135,6 +128,19 @@ void Calculator::save()
     variables.dat
     پوشه محل اجراي برنامه ذخیره می کند
     */
+    ofstream file("variables.dat");
+    if (file.is_open())
+    {
+        for (const auto &v : var)
+        {
+            file << v.first << ln << v.second << ln;
+        }
+        file.close();
+    }
+    else
+    {
+        cout << "(Error: Unable to open file";
+    }
 }
 
 void Calculator::load()
@@ -145,6 +151,23 @@ void Calculator::load()
     در پوشه محل اجراي برنامه را لود میکند.
     • کلیه متغیرهاي فعلی پیش از لود شدن حذف می شوند.
     */
+    ifstream file("variables.dat");
+    if (file.is_open())
+    {
+        var.clear();
+        string name;
+        int value;
+        while (getline(file, name))
+        {
+            file >> value;
+            var.push_back(make_pair(name, value));
+        }
+        file.close();
+    }
+    else
+    {
+        cout << "(Error: Unable to open file";
+    }
 }
 
 void Calculator::about()
@@ -161,20 +184,14 @@ void Calculator::about()
 
 void Calculator::run(string file_name)
 {
-    /*
-     عنوان پارامتر مسیر یک فایل متشکل از دستورات را دریافت و هر یک از آنها را به ترتیب اجرا می کند
-    • هر دستور در یک خط فایل قرار گرفته است
-    • اجراي هر دستور مشابه تایپ و اجراي دستی آن است
-    run c:\project\a.txt
-     */
+
     ifstream file(file_name);
     if (file.is_open())
     {
         string input;
         while (file >> input)
         {
-            cout << input << '\n';
-            // fun(input);
+            fun(input);
         }
         file.close();
     }

@@ -8,7 +8,7 @@
 class Calculator
 {
 private:
-    std::vector<std::string> var;
+    std::vector<std::pair<std::string, double>> var;
     void variables();
     void clear();
     void save();
@@ -16,6 +16,7 @@ private:
     void about();
     void run(std::string);
     bool fun(std::string);
+    void operation(std::string);
 
 public:
     Calculator(){};
