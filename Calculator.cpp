@@ -2,7 +2,7 @@
 
 using namespace std;
 
-#define ln "\n"                                                                            // new line
+#define ln "\n"                                                                            // new input
 #define dn "Danial Mobini (40130023)"                                                      // developer name
 #define sep "------------------------------------------------------------------------\n? " // seperator
 
@@ -24,10 +24,82 @@ using namespace std;
 
 void Calculator::start()
 {
-    cout << "Simple Command Line Expression Calculator\n"
+    cout << "Simple Command input Expression Calculator\n"
          << "Version 1.1\n"
          << "Developer: " << dn << ln
          << sep;
+}
+
+bool Calculator::fun(string input)
+{
+    if (input == "variables")
+    {
+        variables();
+    }
+    else if (input == "clear")
+    {
+        clear();
+    }
+    else if (input == "save")
+    {
+        save();
+    }
+    else if (input == "load")
+    {
+        load();
+    }
+    else if (input == "about")
+    {
+        cout << "ans =\n"
+             << "{\n"
+             << "Simple Command input Expression Calculator\n"
+             << "Version 1.1\n"
+             << "Developer: " << dn << ln
+             << "}\n"
+             << sep;
+    }
+    else if (input == "exit")
+    {
+        return false;
+    }
+    else if (input == "run")
+    {
+        string file_name;
+        cin >> file_name;
+        run(file_name);
+    }
+    else
+    {
+        // اگر عبارت ورودی یک عبارت ریاضی باشد، برنامه باید مقدار آن را محاسبه کرده و نتیجه را چاپ کند.
+        // z=3∗x−2∗y
+        if (input.contains('='))
+        {
+            string str = input.substr(0, input.find('='));
+            var.push_back(str);
+            cout << str << ln;
+        }
+        else if (input.contains('+'))
+        {
+            cout << "a\n";
+        }
+        else if (input.contains('-'))
+        {
+            cout << "a\n";
+        }
+        else if (input.contains('/'))
+        {
+            cout << "a\n";
+        }
+        else if (input.contains('*'))
+        {
+            cout << "a\n";
+        }
+        else
+        {
+            cout << "Error: Invalid command " << input;
+        }
+    }
+    return true;
 }
 
 void Calculator::cal()
@@ -36,51 +108,12 @@ void Calculator::cal()
     {
         string input;
         cin >> input;
-        if (input == "variables")
-        {
-            variables();
-        }
-        else if (input == "clear")
-        {
-            clear();
-        }
-        else if (input == "save")
-        {
-            save();
-        }
-        else if (input == "load")
-        {
-            load();
-        }
-        else if (input == "about")
-        {
-            cout << "ans =\n"
-                 << "{\n"
-                 << "Simple Command Line Expression Calculator\n"
-                 << "Version 1.1\n"
-                 << "Developer: " << dn << ln
-                 << "}\n"
-                 << sep;
-        }
-        else if (input == "exit")
-        {
-            return;
-        }
-        else if (input.contains("run"))
-        {
-            string file_name;
-            file_name = input.substr(4);
-            run(file_name);
-        }
-        else
-        {
-            // اگر عبارت ورودی یک عبارت ریاضی باشد، برنامه باید مقدار آن را محاسبه کرده و نتیجه را چاپ کند.
-        }
-        cal();
+        if (fun(input))
+            cal();
     }
-    catch (const std::exception &e)
+    catch (const exception &e)
     {
-        std::cerr << e.what() << '\n';
+        cerr << e.what() << '\n';
         cal();
     }
 }
@@ -118,7 +151,7 @@ void Calculator::about()
 {
     cout << "ans =\n"
          << "{\n"
-         << "Simple Command Line Expression Calculator\n"
+         << "Simple Command input Expression Calculator\n"
          << "Version 1.1\n"
          << "Developer: " << dn << ln
          << "}\n"
@@ -134,6 +167,19 @@ void Calculator::run(string file_name)
     • اجراي هر دستور مشابه تایپ و اجراي دستی آن است
     run c:\project\a.txt
      */
-    ifstream file;
-    file.open(file_name);
+    ifstream file(file_name);
+    if (file.is_open())
+    {
+        string input;
+        while (file >> input)
+        {
+            cout << input << '\n';
+            // fun(input);
+        }
+        file.close();
+    }
+    else
+    {
+        cout << "(Error: Unable to open file";
+    }
 }
