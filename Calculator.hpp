@@ -1,25 +1,28 @@
 #pragma once
+#include <algorithm>
+#include <cctype>
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <map>
+#include <optional>
+#include <sstream>
 #include <string>
-#include <vector>
 
 class Calculator
 {
 private:
-    std::vector<std::pair<std::string, double>> var;
-    void variables();
-    void clear();
-    void save();
-    void load();
-    void about();
+    std::map<std::string, double> var;
+
     void run(std::string);
-    bool fun(std::string);
-    void operation(std::string);
+    bool cal(std::istream &, std::string Prefix = "? ");
+    std::pair<double, std::string> calculateExpression(std::string &, std::string);
+    std::pair<double, std::string> calculateSimpleExpression(char &, std::string &, std::string &);
 
 public:
     Calculator(){};
+    void first();
     void start();
-    void cal();
 };
+
+bool isNumber(const std::string &str);

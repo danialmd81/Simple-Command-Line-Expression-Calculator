@@ -2,201 +2,484 @@
 
 using namespace std;
 
-#define ln "\n"                                                                            // new input
-#define dn "Danial Mobini (40130023)"                                                      // developer name
-#define sep "------------------------------------------------------------------------\n? " // seperator
+#define ln "\n"                                                                          // new input
+#define dn "Danial Mobini (40130023)"                                                    // developer name
+#define sep "------------------------------------------------------------------------\n" // seperator
 
-void Calculator::start()
+void Calculator::first()
 {
+    system("cls");
     cout << "Simple Command input Expression Calculator\n"
          << "Version 1.1\n"
          << "Developer: " << dn << ln
-         << sep;
+         << sep << "? ";
 }
 
-void Calculator::cal()
+void Calculator::start()
 {
     try
     {
-        string input;
-        cin >> input;
-        if (fun(input))
-            cal();
+        if (cal(cin))
+            start();
     }
     catch (const exception &e)
     {
-        cerr << e.what() << '\n';
-        cal();
+        system("cls");
+        start();
     }
 }
 
-bool Calculator::fun(string input)
+bool Calculator::cal(istream &myStream, string Prefix)
 {
-    if (input == "variables")
+    string input;
+    myStream >> input;
+    transform(input.begin(), input.end(), input.begin(), ::tolower);
+    if (!input.empty())
     {
-        variables();
-    }
-    else if (input == "clear")
-    {
-        clear();
-    }
-    else if (input == "save")
-    {
-        save();
-    }
-    else if (input == "load")
-    {
-        load();
-    }
-    else if (input == "about")
-    {
-        cout << "ans =\n"
-             << "{\n"
-             << "Simple Command input Expression Calculator\n"
-             << "Version 1.1\n"
-             << "Developer: " << dn << ln
-             << "}\n"
-             << sep;
-    }
-    else if (input == "exit")
-    {
-        return false;
-    }
-    else if (input == "run")
-    {
-        string file_name;
-        cin >> file_name;
-        run(file_name);
-    }
-    else
-    {
-        if (input.contains('='))
+        if (input == "variables")
         {
-            if (input.contains('+') || input.contains('-') || input.contains('*') || input.contains('/'))
+            cout << "ans = " << var.size() << " variables\n"
+                 << "{\n";
+            for (auto &&i : this->var)
             {
-                operation(input);
+                cout << i.first << '=' << i.second << ln;
+            }
+            cout << "}\n"
+                 << sep << Prefix;
+        }
+        else if (input == "clear")
+        {
+            cout << "ans =\n"
+                 << "{\n"
+                 << var.size() << " variables deleted\n"
+                 << "}\n"
+                 << sep << Prefix;
+            var.clear();
+        }
+        else if (input == "save")
+        {
+            ofstream file("variables.dat");
+            if (file.is_open())
+            {
+                for (const auto &v : var)
+                {
+                    file << v.first << ln << v.second << ln;
+                }
+                file.close();
+
+                cout << "ans = " << var.size() << " variables\n"
+                     << "{\n"
+                     << "done\n"
+                     << "}\n"
+                     << sep << Prefix;
             }
             else
             {
-                string str = input.substr(0, input.find('='));
-
-                cout << str << ln;
+                cout << "ans = "
+                     << "{\n"
+                     << "Error: Unable to open file\n"
+                     << "}\n"
+                     << sep << Prefix;
             }
         }
-        else if (input.contains('+') || input.contains('-') || input.contains('*') || input.contains('/'))
+        else if (input == "load")
         {
-            operation(input);
+            ifstream file("variables.dat");
+            if (file.is_open())
+            {
+                var.clear();
+                string name;
+                double value;
+                while (getline(file, name))
+                {
+                    file >> value;
+                    var.insert(make_pair(name, value));
+                }
+                file.close();
+
+                cout << "ans = " << var.size() << " variables\n"
+                     << "{\n";
+                for (auto &&i : var)
+                {
+                    cout << i.first << '=' << i.second << ln;
+                }
+                cout << "}\n"
+                     << sep << Prefix;
+            }
+            else
+            {
+                cout << "ans = "
+                     << "{\n"
+                     << "Error: Unable to open file\n"
+                     << "}\n"
+                     << sep << Prefix;
+            }
+        }
+        else if (input == "about")
+        {
+            cout << "ans =\n"
+                 << "{\n"
+                 << "Simple Command input Expression Calculator\n"
+                 << "Version 1.1\n"
+                 << "Developer: " << dn << ln
+                 << "}\n"
+                 << sep << Prefix;
+        }
+        else if (input == "exit")
+        {
+            return false;
+        }
+        else if (input.contains("run"))
+        {
+            string file_name;
+            myStream >> file_name;
+            run(file_name);
         }
         else
         {
-            cout << "Error: Invalid command " << input << ln;
+            string no_s_str;
+
+            for (char c : input)
+            {
+                if (c != ' ')
+                {
+                    no_s_str += c;
+                }
+            }
+
+            pair<double, string> result;
+            if (no_s_str.contains('='))
+            {
+                size_t pos = no_s_str.find('=');
+                string str = no_s_str.substr(0, pos);
+                no_s_str = no_s_str.erase(0, pos + 1);
+
+                if (no_s_str.contains('+') || no_s_str.contains('-') ||
+                    no_s_str.contains('*') || no_s_str.contains('/'))
+                {
+                    result = calculateExpression(no_s_str, input);
+                    if (result.second != "null")
+                    {
+                        cout << "ans =\n"
+                             << "{\n"
+                             << result.second << ln
+                             << "}\n"
+                             << sep << Prefix;
+                    }
+                    else
+                    {
+                        var.insert({str, calculateExpression(no_s_str, input).first});
+                        cout << "ans =\n"
+                             << "{\n"
+                             << str << "=" << var[str] << ln
+                             << "}\n"
+                             << sep << Prefix;
+                    }
+                }
+                else
+                {
+                    if (isNumber(no_s_str))
+                    {
+                        var.insert({str, stod(no_s_str)});
+                        cout << "ans =\n"
+                             << "{\n"
+                             << str << "=" << var[str] << ln
+                             << "}\n"
+                             << sep << Prefix;
+                    }
+                    else
+                    {
+                        if (var.find(no_s_str) != var.end())
+                        {
+                            var.insert({str, var[no_s_str]});
+                            cout << "ans =\n"
+                                 << "{\n"
+                                 << str << "=" << var[str] << ln
+                                 << "}\n"
+                                 << sep << Prefix;
+                        }
+                        else
+                        {
+                            cout << "ans =\n"
+                                 << "{\n"
+                                 << "Error: Undefined variable " << no_s_str << ln
+                                 << "}\n"
+                                 << sep << Prefix;
+                        }
+                    }
+                }
+            }
+            else if (no_s_str.contains('+') || no_s_str.contains('-') ||
+                     no_s_str.contains('*') || no_s_str.contains('/'))
+            {
+                result = calculateExpression(no_s_str, input);
+                if (result.second != "null")
+                {
+                    cout << "ans =\n"
+                         << "{\n"
+                         << result.second << ln
+                         << "}\n"
+                         << sep << Prefix;
+                }
+                else
+                {
+                    cout << "ans =\n"
+                         << "{\n"
+                         << calculateExpression(no_s_str, input).first << ln
+                         << "}\n"
+                         << sep << Prefix;
+                }
+            }
+            else
+            {
+                cout << "ans =\n"
+                     << "{\n"
+                     << "Error: Invalid command " << input << ln
+                     << "}\n"
+                     << sep << Prefix;
+            }
+        }
+        return true;
+    }
+    return false;
+}
+
+// ∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧
+size_t find_operator_after(size_t &pos, string &str)
+{
+    size_t i;
+    for (i = pos + 1; i < str.size(); ++i)
+    {
+        if (str.at(i) == '*' || str.at(i) == '/' || str.at(i) == '+' || str.at(i) == '-')
+        {
+            break;
         }
     }
+    return i;
+}
+
+size_t find_operator_befor(size_t &pos, string str)
+{
+    size_t i;
+    for (i = pos - 1; i > 0; --i)
+    {
+        if (str.at(i) == '*' || str.at(i) == '/' || str.at(i) == '+' || str.at(i) == '-')
+        {
+            break;
+        }
+    }
+    return i;
+}
+
+bool operanding(string &expression, string &operand1, string &operand2, char &myOperator,
+                size_t &befor_pos)
+{
+    if (expression.contains('*') || expression.contains('/'))
+    {
+        if (expression.contains('*') && expression.contains('/') && expression.find('*') < expression.find('/'))
+        {
+            myOperator = '*';
+        }
+        else if (expression.contains('*') && expression.contains('/'))
+        {
+            myOperator = '/';
+        }
+        else if (expression.contains('*'))
+        {
+            myOperator = '*';
+        }
+        else
+        {
+            myOperator = '/';
+        }
+    }
+    else if (expression.contains('+') || expression.contains('-'))
+    {
+        if (expression.contains('+') && expression.contains('-') && expression.find('+') < expression.find('-'))
+        {
+            myOperator = '+';
+        }
+        else if (expression.contains('+') && expression.contains('-'))
+        {
+            myOperator = '-';
+        }
+        else if (expression.contains('+'))
+        {
+            myOperator = '+';
+        }
+        else
+        {
+            myOperator = '-';
+        }
+    }
+    else
+    {
+        return false;
+    }
+    size_t pos = expression.find(myOperator), after_pos = find_operator_after(pos, expression);
+    befor_pos = find_operator_befor(pos, expression);
+
+    operand1 = expression.substr(befor_pos, pos);
+    operand2.clear();
+    for (size_t i = pos + 1; i < after_pos; i++)
+    {
+        operand2 += expression.at(i);
+    }
+
+    expression.erase(befor_pos, after_pos);
+
     return true;
 }
 
-void Calculator::operation(string str)
+pair<double, string> Calculator::calculateExpression(string &expression, string input)
 {
-}
-
-void Calculator::variables()
-{
-    // منجر به چاپ لیست متغیرهاي تعریف شده به همراه ارزش آنها می شود
-    cout << "ans =\n"
-         << "{\n";
-    for (auto &&i : var)
+    pair<double, string> result;
+    if (expression.contains("++") || expression.contains("--") ||
+        expression.contains("**") || expression.contains("//"))
     {
-        cout << i.first << '=' << i.second << ln;
-    }
-    cout << "}\n"
-         << sep;
-}
-
-void Calculator::clear()
-{
-    //  کلیه متغیرها را حذف می کن . د
-    cout << "ans =\n"
-         << "{\n"
-         << var.size() << " variables deleted\n";
-    var.clear();
-}
-
-void Calculator::save()
-{
-    /*
-    کلیه متغیرها را در یک فایل با نام
-    variables.dat
-    پوشه محل اجراي برنامه ذخیره می کند
-    */
-    ofstream file("variables.dat");
-    if (file.is_open())
-    {
-        for (const auto &v : var)
-        {
-            file << v.first << ln << v.second << ln;
-        }
-        file.close();
+        result = {0, "Error: Invalid Expression " + input};
     }
     else
     {
-        cout << "(Error: Unable to open file";
+        char myOperator;
+        string operand1, operand2;
+        size_t before_pos;
+        while (operanding(expression, operand1, operand2, myOperator, before_pos))
+        {
+            result = calculateSimpleExpression(myOperator, operand1, operand2);
+            if (result.second != "null")
+                return result;
+            expression.insert(before_pos, to_string(result.first));
+        }
+        result.first = stod(expression);
     }
+    return result;
+}
+// ∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨
+//-------------------------------------------------------------------------------------------
+// ∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧∧
+bool isNumber(const std::string &str)
+{
+    bool flag = true;
+    for (char c : str)
+    {
+        if (isdigit(c) == false && c != '.')
+        {
+            flag = false;
+            break;
+        }
+    }
+    return flag;
 }
 
-void Calculator::load()
+optional<double> operander(string &operand, map<string, double> &var)
 {
-    /*
-    کلیه متغیرهاي ذخیره شده در فایل
-    variables.dat
-    در پوشه محل اجراي برنامه را لود میکند.
-    • کلیه متغیرهاي فعلی پیش از لود شدن حذف می شوند.
-    */
-    ifstream file("variables.dat");
-    if (file.is_open())
+    double o;
+    if (isNumber(operand))
     {
-        var.clear();
-        string name;
-        int value;
-        while (getline(file, name))
-        {
-            file >> value;
-            var.push_back(make_pair(name, value));
-        }
-        file.close();
+        o = stof(operand);
     }
     else
     {
-        cout << "(Error: Unable to open file";
+        if (var.find(operand) != var.end())
+        {
+            o = var[operand];
+        }
+        else
+            return nullopt;
     }
+    return o;
 }
 
-void Calculator::about()
+pair<double, string> Calculator::calculateSimpleExpression(char &myOperator, string &operand1, string &operand2)
 {
-    cout << "ans =\n"
-         << "{\n"
-         << "Simple Command input Expression Calculator\n"
-         << "Version 1.1\n"
-         << "Developer: " << dn << ln
-         << "}\n"
-         << sep;
-    return;
+    double o1, o2, result;
+    auto res = operander(operand1, var);
+    if (res != nullopt)
+        o1 = res.value();
+    else
+        return {0, "Error: Invalid variable name " + operand1};
+
+    res = operander(operand2, var);
+    if (res != nullopt)
+        o2 = res.value();
+    else
+        return {0, "Error: Invalid variable name " + operand2};
+
+    try
+    {
+        switch (myOperator)
+        {
+        case '*':
+            result = o1 * o2;
+            break;
+        case '/':
+            result = o1 / o2;
+            break;
+        case '+':
+            result = o1 + o2;
+            break;
+        case '-':
+            result = o1 - o2;
+            break;
+        default:
+            return {0, "Operator"};
+            break;
+        }
+    }
+    catch (const std::exception &e)
+    {
+        return {result, e.what()};
+    }
+
+    if (result == 1.0f / 0.0f)
+    {
+        return {0, "Error: Divide by zero"};
+    }
+    return {result, "null"};
+}
+// ∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨∨
+
+int countLines(const std::string &filename)
+{
+    ifstream file(filename);
+    int count = 0;
+    std::string line;
+
+    while (std::getline(file, line))
+    {
+        ++count;
+    }
+    file.close();
+    return count;
 }
 
 void Calculator::run(string file_name)
 {
-
+    int n = countLines(file_name);
     ifstream file(file_name);
     if (file.is_open())
     {
-        string input;
-        while (file >> input)
+        cout << "ans = " << countLines(file_name) << ln << ln;
+
+        cout << "[1] ";
+        for (int i = 1; i < n; i++)
         {
-            fun(input);
+            string input;
+            getline(file, input);
+            cout << input << ln;
+            istringstream iss(input);
+            cal(iss, "[" + to_string(i + 1) + "]" + " ");
         }
+        cal(file);
         file.close();
     }
     else
     {
-        cout << "(Error: Unable to open file";
+        cout << "ans = "
+             << "{\n"
+             << "Error: Unable to open file\n"
+             << "}\n"
+             << sep << " ?";
     }
 }

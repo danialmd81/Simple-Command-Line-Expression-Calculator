@@ -5,8 +5,8 @@ int main()
     try
     {
         Calculator cal;
+        cal.first();
         cal.start();
-        cal.cal();
     }
     catch (const std::exception &e)
     {
