@@ -8,7 +8,6 @@ using namespace std;
 
 void Calculator::first()
 {
-    system("cls");
     cout << "Simple Command input Expression Calculator\n"
          << "Version 1.1\n"
          << "Developer: " << dn << ln
@@ -24,7 +23,7 @@ void Calculator::start()
     }
     catch (const exception &e)
     {
-        system("cls");
+        cout << e.what() << ln;
         start();
     }
 }
@@ -88,12 +87,11 @@ bool Calculator::cal(istream &myStream, string Prefix)
             if (file.is_open())
             {
                 var.clear();
-                string name;
-                double value;
+                string name, value;
                 while (getline(file, name))
                 {
-                    file >> value;
-                    var.insert(make_pair(name, value));
+                    getline(file, value);
+                    var.insert({name, stod(value)});
                 }
                 file.close();
 
@@ -168,7 +166,15 @@ bool Calculator::cal(istream &myStream, string Prefix)
                     }
                     else
                     {
-                        var.insert({str, calculateExpression(no_s_str, input).first});
+                        if (var.contains(str))
+                        {
+                            var[str] = calculateExpression(no_s_str, input).first;
+                        }
+                        else
+                        {
+                            var.insert({str, calculateExpression(no_s_str, input).first});
+                        }
+
                         cout << "ans =\n"
                              << "{\n"
                              << str << "=" << var[str] << ln
@@ -377,7 +383,7 @@ optional<double> operander(string &operand, map<string, double> &var)
     double o;
     if (isNumber(operand))
     {
-        o = stof(operand);
+        o = stod(operand);
     }
     else
     {
@@ -471,7 +477,11 @@ void Calculator::run(string file_name)
             istringstream iss(input);
             cal(iss, "[" + to_string(i + 1) + "]" + " ");
         }
-        cal(file);
+        string input;
+        getline(file, input);
+        cout << input << ln;
+        istringstream iss(input);
+        cal(iss);
         file.close();
     }
     else
