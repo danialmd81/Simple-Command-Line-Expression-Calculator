@@ -1,0 +1,7 @@
+var1=12*3/1+2-3
+var2=10/2*3-1+2
+Variables
+save
+clear
+load
+about

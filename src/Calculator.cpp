@@ -490,6 +490,6 @@ void Calculator::run(string file_name)
              << "{\n"
              << "Error: Unable to open file\n"
              << "}\n"
-             << sep << " ?";
+             << sep << "? ";
     }
 }
